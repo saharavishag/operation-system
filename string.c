@@ -103,3 +103,88 @@ strlen(const char *s)
   return n;
 }
 
+static void
+sputc(char* dst, char c, int* index)
+{
+  dst[(*index)++] = c;
+}
+
+static void
+sprintint(char* dst, int xx, int base, int sgn,int* index)
+{
+  static char digits[] = "0123456789ABCDEF";
+  char buf[16];
+  int i, neg;
+  uint x;
+
+  neg = 0;
+  if(sgn && xx < 0){
+    neg = 1;
+    x = -xx;
+  } else {
+    x = xx;
+  }
+
+  i = 0;
+  do{
+    buf[i++] = digits[x % base];
+  }while((x /= base) != 0);
+  if(neg)
+    buf[i++] = '-';
+
+  while(--i >= 0)
+    sputc(dst, buf[i],index);
+}
+
+// Print to the given fd. Only understands %d, %x, %p, %s.
+void
+sprintf(char* dst, const char *fmt, ...)
+{
+  char *s;
+  int c, i, state;
+  uint *ap;
+  int index = 0;
+  state = 0;
+  ap = (uint*)(void*)&fmt + 1;
+  for(i = 0; fmt[i]; i++){
+    c = fmt[i] & 0xff;
+    if(state == 0){
+      if(c == '%'){
+        state = '%';
+      } else {
+        sputc(dst, c,&index);
+      }
+    } else if(state == '%'){
+      if(c == 'd'){
+        sprintint(dst, *ap, 10, 1,&index);
+        ap++;
+      } else if(c == 'x' || c == 'p'){
+        sprintint(dst, *ap, 16, 0,&index);
+        ap++;
+      } else if(c == 's'){
+        s = (char*)*ap;
+        ap++;
+        if(s == 0)
+          s = "(null)";
+        while(*s != 0){
+          sputc(dst, *s,&index);
+          s++;
+        }
+      } else if(c == 'c'){
+        sputc(dst, *ap,&index);
+        ap++;
+      } else if(c == '%'){
+        sputc(dst, c,&index);
+      } else {
+        // Unknown % sequence.  Print it to draw attention.
+        sputc(dst, '%',&index);
+        sputc(dst, c,&index);
+      }
+      state = 0;
+    }
+  }
+  dst[index] = '\0';
+}
+
+
+

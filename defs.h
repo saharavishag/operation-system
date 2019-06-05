@@ -33,6 +33,8 @@ void            fileinit(void);
 int             fileread(struct file*, char*, int n);
 int             filestat(struct file*, struct stat*);
 int             filewrite(struct file*, char*, int n);
+void            procfs_filestat(int *freeFds, int *uniqueInodesFds, int *writableFds, int *readablesFds, int *totalRefs, int *usedFds);
+
 
 // fs.c
 void            readsb(int dev, struct superblock *sb);
@@ -52,11 +54,13 @@ struct inode*   nameiparent(char*, char*);
 int             readi(struct inode*, char*, uint, uint);
 void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
+struct inode*   iget(uint dev, uint inum);
 
 // ide.c
 void            ideinit(void);
 void            ideintr(void);
 void            iderw(struct buf*);
+void            ideinfo(int *waitOp, int *readOp, int *writeOp, char *blocks);
 
 // ioapic.c
 void            ioapicenable(int irq, int cpu);
@@ -150,6 +154,7 @@ char*           safestrcpy(char*, const char*, int);
 int             strlen(const char*);
 int             strncmp(const char*, const char*, uint);
 char*           strncpy(char*, const char*, int);
+void            sprintf(char* dst, const char *fmt, ...);
 
 // syscall.c
 int             argint(int, int*);

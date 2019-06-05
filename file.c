@@ -155,3 +155,23 @@ filewrite(struct file *f, char *addr, int n)
   panic("filewrite");
 }
 
+void procfs_filestat(int *freeFds, int *uniqueInodesFds, int *writableFds, int *readablesFds, int *totalRefs, int *usedFds){
+  struct file *f;
+
+  acquire(&ftable.lock);
+  for(f = ftable.file; f < ftable.file + NFILE; f++){
+    if(f->ref == 0){
+     (*freeFds)++;
+    } else{
+      (*usedFds)++;
+      if(f->readable)
+        (*readablesFds)++;
+      if(f->writable)
+        (*writableFds)++;
+      (*totalRefs)+= f->ref;
+    }
+  }
+  release(&ftable.lock);
+  return;
+}
+
