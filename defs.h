@@ -127,6 +127,8 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+int             getNumOfRunningProcs();
+int             getProcInfo(int pid, char *name, int *size, char *status);
 
 // procfs.c
 void            procfsinit(void);
