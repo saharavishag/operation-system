@@ -55,6 +55,9 @@ int             readi(struct inode*, char*, uint, uint);
 void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
 struct inode*   iget(uint dev, uint inum);
+int             getNumOfInodesInUse();
+int             indexInInodeTable(int off);
+struct          inode* getInodeByIndex(int index);
 
 // ide.c
 void            ideinit(void);

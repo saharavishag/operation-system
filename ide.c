@@ -181,5 +181,5 @@ void ideinfo(int *waitOp, int *readOp, int *writeOp, char *blocks) {
         }
     }
 
-
+    release(&idelock);
 }

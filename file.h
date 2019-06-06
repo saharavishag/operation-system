@@ -50,5 +50,6 @@ extern struct devsw devsw[];
 #define IDE_INFO 8
 #define IDE_INFO_OFF 0
 #define INODE_INFO 100
+#define INODE_INFO_OFF 2
 #define IS_INODE_INFO(minor) (minor >= 100 && minor <= 200)
 #define GET_INODE_INFO_INDEX(minor) (minor - 100)

@@ -184,7 +184,7 @@ iinit(int dev) {
 }
 
 //static struct inode *iget(uint dev, uint inum);
- struct inode *iget(uint dev, uint inum);
+struct inode *iget(uint dev, uint inum);
 
 //PAGEBREAK!
 // Allocate an inode on device dev.
@@ -515,18 +515,19 @@ dirlookup(struct inode *dp, char *name, uint *poff) {
     if (dp->type != T_DIR && !IS_DEV_DIR(dp))
         panic("dirlookup not DIR");
     if (IS_DEV_DIR(dp) && dp->minor == PROC_MINOR)
-        dp->size = 2 * sizeof(de);
+        dp->size = 67 * sizeof(struct dirent);
     for (off = 0; off < dp->size; off += sizeof(de)) {
         if (readi(dp, (char *) &de, off, sizeof(de)) != sizeof(de)) {
-//            cprintf("dirlookup readi failed: %s\n", name);
+            cprintf("dirlookup readi failed: %s\n", name);
             if (dp->type == T_DEV)
                 return 0;
             panic("dirlookup read");
         }
-//        cprintf("dirlookup readi success: %s\n", name);
         if (de.inum == 0)
             continue;
+//        cprintf("dirlookup readi success de: %s\n",de.name);
         if (namecmp(name, de.name) == 0) {
+//            cprintf("dirlookup readi success: %s\n", name);
             // entry matches path element
             if (poff)
                 *poff = off;
@@ -659,4 +660,42 @@ namei(char *path) {
 struct inode *
 nameiparent(char *path, char *name) {
     return namex(path, 1, name);
+}
+
+int getNumOfInodesInUse() {
+    int num = 0;
+    struct inode *ip;
+    acquire(&icache.lock);
+    for (ip = &icache.inode[0]; ip < &icache.inode[NINODE]; ip++) {
+        if (ip->ref > 0) {
+            num++;
+        }
+    }
+    release(&icache.lock);
+    return num;
+}
+
+int indexInInodeTable(int off) {
+    int index = 0;
+    struct inode *ip;
+    acquire(&icache.lock);
+    for (ip = &icache.inode[0]; ip < &icache.inode[NINODE]; ip++,index++) {
+        if (ip->ref > 0 || ip->type == T_DEV) {
+            if(!(off--)){
+                release(&icache.lock);
+                return index;
+            }
+        }
+    }
+    release(&icache.lock);
+    return -1;
+}
+struct inode* getInodeByIndex(int index){
+    if(index < 0 || index > NINODE)
+        panic("unknown index of inode");
+    struct inode *ip;
+    acquire(&icache.lock);
+    ip = &icache.inode[index];
+    release(&icache.lock);
+    return ip;
 }
