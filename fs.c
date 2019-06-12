@@ -514,11 +514,11 @@ dirlookup(struct inode *dp, char *name, uint *poff) {
 
     if (dp->type != T_DIR && !IS_DEV_DIR(dp))
         panic("dirlookup not DIR");
-    if (IS_DEV_DIR(dp) && dp->minor == PROC_MINOR) {
-        int numOfRunningProcs = getNumOfRunningProcs();
-        dp->size = (numOfRunningProcs + 3) * sizeof(struct dirent);
-    }
-    for (off = 0; off < dp->size; off += sizeof(de)) {
+//    if (IS_DEV_DIR(dp) && dp->minor == PROC_MINOR) {
+//        int numOfRunningProcs = getNumOfRunningProcs();
+//        dp->size = (numOfRunningProcs + 3) * sizeof(struct dirent);
+//    }
+    for (off = 0; off < dp->size || dp->type == T_DEV; off += sizeof(de)) {
         if (readi(dp, (char *) &de, off, sizeof(de)) != sizeof(de)) {
             cprintf("dirlookup readi failed: %s\n", name);
             if (dp->type == T_DEV)

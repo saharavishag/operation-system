@@ -36,13 +36,13 @@ procfsiread(struct inode *dp, struct inode *ip) {
         ip->minor = IDE_INFO;
     } else if (ip->inum == TOTAL_INODE_NUM + INODE_INFO) {
         ip->minor = INODE_INFO;
-        int numOfNodesInUse = getNumOfInodesInUse();
-        ip->size = numOfNodesInUse * sizeof(struct dirent);
+//        int numOfNodesInUse = getNumOfInodesInUse();
+//        ip->size = numOfNodesInUse * sizeof(struct dirent);
     } else if (IS_INODE_INFO_INDEX_INUM(ip)) {
         ip->minor = (short) GET_INODE_INFO_INDEX_MINOR(ip);
     } else if (ip->inum > PID_INUM_START && (ip->inum & 3) == 0) {
         ip->minor = (short) ip->inum;
-        ip->size = 2 * sizeof(struct dirent);
+//        ip->size = 2 * sizeof(struct dirent);
     } else if (ip->inum > PID_INUM_START) {
         ip->minor = (short) ip->inum;
     }
@@ -72,11 +72,9 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
                 de->inum = (INODE_INFO + TOTAL_INODE_NUM);
                 return sizeof(struct dirent);
             default:
-                if (deOff <= 2 || off >= ip->size)
-                    return 0;
-
                 index = deOff - INODE_INFO_OFF;
                 pid = getPIDByIndex(index);
+//                cprintf("pid: %d\n",pid);
                 if(pid < 0)
                     return 0;
                 sprintf(de->name, "%d", pid);
