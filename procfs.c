@@ -125,7 +125,7 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
         struct inode *np = getInodeByIndex(index);
         char *types[] = {"", "FILE", "DIR", "DEV"};
         sprintf(dst,
-                "Device: %d\nInode number: %d\nis valid: %d\ntype: %s\nmajor minor: (%d, %d)\nhard links: %d\nblocks used: %d\n",
+                "Device: %d\nInode number: %d\nis valid: %d\ntype: %s\nmajor minor: (%d,%d)\nhard links: %d\nblocks used: %d\n",
                 np->dev, np->inum, (np->valid) ? 1 : 0, types[np->type], np->major, np->minor, np->nlink,
                 (np->type != T_DEV) ? np->size / BSIZE  + (np->size % BSIZE > 0) : 0);
         return strlen(dst);

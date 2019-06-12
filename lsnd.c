@@ -43,7 +43,6 @@ int main(void) {
     char result[512];
 
     while (read(inodesDirFd, &de, sizeof(de)) > 0) {
-        printf(1, "name: %s inum: %d\n", de.name, de.inum);
         sprintf(path, "/proc/inodeinfo/%s", de.name);
         int inodeFd = open(path, 0);
         if (read(inodeFd, &buf, sizeof(buf)) <= 0) {
