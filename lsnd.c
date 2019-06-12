@@ -50,8 +50,7 @@ int main(void) {
             printf(1, "reading name: %s inum: %d failed\n", de.name, de.inum);
         }
         getData(buf, result);
-        printf(1, "result: %s\n", result);
-
+        printf(1, "%s\n", result);
 
         close(inodeFd);
 
