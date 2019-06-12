@@ -30,11 +30,11 @@ procfsiread(struct inode *dp, struct inode *ip) {
     ip->type = T_DEV;
     ip->valid = 1;
     ip->ref = (ip->ref > 0) ? ip->ref : 1;
-    if (ip->inum == NINODE + FILE_STAT) {
+    if (ip->inum == TOTAL_INODE_NUM + FILE_STAT) {
         ip->minor = FILE_STAT;
-    } else if (ip->inum == NINODE + IDE_INFO) {
+    } else if (ip->inum == TOTAL_INODE_NUM + IDE_INFO) {
         ip->minor = IDE_INFO;
-    } else if (ip->inum == NINODE + INODE_INFO) {
+    } else if (ip->inum == TOTAL_INODE_NUM + INODE_INFO) {
         ip->minor = INODE_INFO;
         int numOfNodesInUse = getNumOfInodesInUse();
         ip->size = numOfNodesInUse * sizeof(struct dirent);
@@ -52,27 +52,33 @@ procfsiread(struct inode *dp, struct inode *ip) {
 
 int
 procfsread(struct inode *ip, char *dst, int off, int n) {
+    //case /proc
     if (ip->minor == PROC_MINOR) {
         struct dirent *de = (struct dirent *) dst;
         int deOff = off / sizeof(struct dirent);
         int pid = 0;
+        int index = 0;
         switch (deOff) {
             case IDE_INFO_OFF:
                 safestrcpy(de->name, "ideinfo", sizeof("ideinfo"));
-                de->inum = (IDE_INFO + NINODE);
+                de->inum = (IDE_INFO + TOTAL_INODE_NUM);
                 return sizeof(struct dirent);
             case FILE_STAT_OFF:
                 safestrcpy(de->name, "filestat", sizeof("filestat"));
-                de->inum = (FILE_STAT + NINODE);
+                de->inum = (FILE_STAT + TOTAL_INODE_NUM);
                 return sizeof(struct dirent);
             case INODE_INFO_OFF:
                 safestrcpy(de->name, "inodeinfo", sizeof("inodeinfo"));
-                de->inum = (INODE_INFO + NINODE);
+                de->inum = (INODE_INFO + TOTAL_INODE_NUM);
                 return sizeof(struct dirent);
             default:
                 if (deOff <= 2 || off >= ip->size)
                     return 0;
-                pid = deOff - INODE_INFO_OFF;
+
+                index = deOff - INODE_INFO_OFF;
+                pid = getPIDByIndex(index);
+                if(pid < 0)
+                    return 0;
                 sprintf(de->name, "%d", pid);
                 de->inum = (ushort) (PID_INUM_START + pid ) << 2;
                 return sizeof(struct dirent);
@@ -91,7 +97,8 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
                 freeFds, uniqueInodesFds, writableFds, readablesFds, totalRefs, usedFds);
         return strlen(dst);
 
-    } else if (ip->minor == IDE_INFO) {
+    }//case /proc/ideinfo
+    else if (ip->minor == IDE_INFO) {
         if (off > 0)
             return 0;
         int waitOp = 0;
@@ -110,10 +117,10 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
         if (index < 0)
             return 0;
         sprintf(de->name, "%d", index);
-//        cprintf("%d", index);
         de->inum = (ushort) GET_INODE_INFO_INDEX_INUM(index);
         return sizeof(struct dirent);
-    } else if (ip->minor > INODE_INFO && ip->minor <= INODE_INFO + NINODE + 1) {
+    } //case /proc/inodeinfo/...
+    else if (ip->minor > INODE_INFO && ip->minor <= INODE_INFO + NINODE + 1) {
         if (off > 0)
             return 0;
         int index = ip->minor - 1 - INODE_INFO;
@@ -124,7 +131,8 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
                 np->dev, np->inum, (np->valid) ? 1 : 0, types[np->type], np->major, np->minor, np->nlink,
                 (np->type != T_DEV) ? np->size / BSIZE : 0);
         return strlen(dst);
-    } else if (ip->minor > PID_INUM_START && (ip->minor & 3) == 0) {
+    }//case /proc/PID
+    else if (ip->minor > PID_INUM_START && (ip->minor & 3) == 0) {
         struct dirent *de = (struct dirent *) dst;
         int deOff = off / sizeof(struct dirent);
         if (deOff == PID_NAME_OFF) {

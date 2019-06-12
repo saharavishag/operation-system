@@ -561,3 +561,20 @@ int getProcInfo(int pid, char *name, int *size, char *status) {
     return  -1;
 
 }
+
+int getPIDByIndex(int index){
+    struct proc *p;
+    if(index < 0 || index >= NPROC)
+        return -1;
+    acquire(&ptable.lock);
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+        if (p->state != UNUSED) {
+            if((index--) == 1) {
+                release(&ptable.lock);
+                return p->pid;
+            }
+        }
+    }
+    release(&ptable.lock);
+    return  -1;
+}
