@@ -683,3 +683,42 @@ nameiparent(char *path, char *name)
 {
   return namex(path, 1, name);
 }
+
+
+int getNumOfInodesInUse() {
+  int num = 0;
+  struct inode *ip;
+  acquire(&icache.lock);
+  for (ip = &icache.inode[0]; ip < &icache.inode[NINODE]; ip++) {
+    if (ip->ref > 0) {
+      num++;
+    }
+  }
+  release(&icache.lock);
+  return num;
+}
+
+int indexInInodeTable(int off) {
+  int index = 0;
+  struct inode *ip;
+  acquire(&icache.lock);
+  for (ip = &icache.inode[0]; ip < &icache.inode[NINODE]; ip++,index++) {
+    if (ip->ref > 0 || ip->type == T_DEV) {
+      if(!(off--)){
+        release(&icache.lock);
+        return index;
+      }
+    }
+  }
+  release(&icache.lock);
+  return -1;
+}
+struct inode* getInodeByIndex(int index){
+  if(index < 0 || index > NINODE)
+    panic("unknown index of inode");
+  struct inode *ip;
+  acquire(&icache.lock);
+  ip = &icache.inode[index];
+  release(&icache.lock);
+  return ip;
+}
