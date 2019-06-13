@@ -59,6 +59,14 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
         int pid = 0;
         int index = 0;
         switch (deOff) {
+            case CURRENT_DIR_OFF:
+                safestrcpy(de->name, ".", sizeof("."));
+                de->inum = (ushort) ip->inum;
+                return sizeof(struct dirent);
+            case PARENT_DIR_OFF:
+                safestrcpy(de->name, "..", sizeof(".."));
+                de->inum = (ushort) namei("/")->inum;
+                return sizeof(struct dirent);
             case IDE_INFO_OFF:
                 safestrcpy(de->name, "ideinfo", sizeof("ideinfo"));
                 de->inum = (IDE_INFO + TOTAL_INODE_NUM);
@@ -75,10 +83,10 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
                 index = deOff - INODE_INFO_OFF;
                 pid = getPIDByIndex(index);
 //                cprintf("pid: %d\n",pid);
-                if(pid < 0)
+                if (pid < 0)
                     return 0;
                 sprintf(de->name, "%d", pid);
-                de->inum = (ushort) (PID_INUM_START + pid ) << 2;
+                de->inum = (ushort) (PID_INUM_START + pid) << 2;
                 return sizeof(struct dirent);
         }
     } else if (ip->minor == FILE_STAT) {
@@ -127,7 +135,7 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
         sprintf(dst,
                 "Device: %d\nInode number: %d\nis valid: %d\ntype: %s\nmajor minor: (%d,%d)\nhard links: %d\nblocks used: %d\n",
                 np->dev, np->inum, (np->valid) ? 1 : 0, types[np->type], np->major, np->minor, np->nlink,
-                (np->type != T_DEV) ? np->size / BSIZE  + (np->size % BSIZE > 0) : 0);
+                (np->type != T_DEV) ? np->size / BSIZE + (np->size % BSIZE > 0) : 0);
         return strlen(dst);
     }//case /proc/PID
     else if (ip->minor > PID_INUM_START && (ip->minor & 3) == 0) {
@@ -146,20 +154,20 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
         if (off > 0)
             return 0;
         char procName[16];
-        int pid = ((ip->minor - 1) >> 2) - PID_INUM_START ;
-        if(getProcInfo(pid,procName,0,0) < 0)
+        int pid = ((ip->minor - 1) >> 2) - PID_INUM_START;
+        if (getProcInfo(pid, procName, 0, 0) < 0)
             return 0;
-        sprintf(dst,"%s\n",procName);
+        sprintf(dst, "%s\n", procName);
         return strlen(dst);
     } else if (ip->minor > PID_INUM_START && ip->minor & 2) {
         if (off > 0)
             return 0;
         char status[16];
         int size = 0;
-        int pid =  ((ip->minor - 2) >> 2) - PID_INUM_START;
-        if(getProcInfo(pid,0,&size,status) < 0)
+        int pid = ((ip->minor - 2) >> 2) - PID_INUM_START;
+        if (getProcInfo(pid, 0, &size, status) < 0)
             return 0;
-        sprintf(dst,"state: %s\nsize: %d\n",status,size);
+        sprintf(dst, "state: %s\nsize: %d\n", status, size);
         return strlen(dst);
     }
     return 0;

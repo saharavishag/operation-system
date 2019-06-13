@@ -178,6 +178,7 @@ void ideinfo(int *waitOp, int *readOp, int *writeOp, char *blocks) {
             temp = blocks + strlen(blocks);
         } else{
             sprintf(temp, "(#%d,#%d)",b->dev,b->blockno);
+            temp = blocks + strlen(blocks);
         }
     }
 

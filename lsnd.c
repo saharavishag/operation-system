@@ -48,6 +48,7 @@ int main(void) {
         if (read(inodeFd, &buf, sizeof(buf)) <= 0) {
             printf(1, "reading name: %s inum: %d failed\n", de.name, de.inum);
         }
+//        printf(1, "%s\n", buf);
         getData(buf, result);
         printf(1, "%s\n", result);
 
