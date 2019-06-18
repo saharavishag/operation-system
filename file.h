@@ -57,11 +57,12 @@ extern struct devsw devsw[];
 #define GET_INODE_INFO_INDEX_MINOR(ip) (INODE_INFO + (ip->inum - TOTAL_INODE_NUM - INODE_INFO))
 #define GET_INODE_INFO_INDEX_INUM(index) (INODE_INFO + TOTAL_INODE_NUM + index + 1)
 
-#define PID_NAME_OFF 0
-#define PID_STATUS_OFF 1
+#define PID_NAME_OFF 2
+#define PID_STATUS_OFF 3
 
 #define CURRENT_DIR_OFF 0
 #define PARENT_DIR_OFF 1
+
 #define IDE_INFO_OFF 2
 #define FILE_STAT_OFF 3
 #define INODE_INFO_OFF 4

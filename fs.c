@@ -537,7 +537,6 @@ dirlookup(struct inode *dp, char *name, uint *poff)
 //    }
     for (off = 0; off < dp->size || dp->type == T_DEV; off += sizeof(de)) {
         if (readi(dp, (char *) &de, off, sizeof(de)) != sizeof(de)) {
-            cprintf("dirlookup readi failed: %s\n", name);
             if (dp->type == T_DEV)
                 return 0;
             panic("dirlookup read");
@@ -703,7 +702,7 @@ int indexInInodeTable(int off) {
   struct inode *ip;
   acquire(&icache.lock);
   for (ip = &icache.inode[0]; ip < &icache.inode[NINODE]; ip++,index++) {
-    if (ip->ref > 0 || ip->type == T_DEV) {
+    if (ip->ref > 0) {
       if(!(off--)){
         release(&icache.lock);
         return index;

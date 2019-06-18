@@ -36,13 +36,10 @@ procfsiread(struct inode *dp, struct inode *ip) {
         ip->minor = IDE_INFO;
     } else if (ip->inum == TOTAL_INODE_NUM + INODE_INFO) {
         ip->minor = INODE_INFO;
-//        int numOfNodesInUse = getNumOfInodesInUse();
-//        ip->size = numOfNodesInUse * sizeof(struct dirent);
     } else if (IS_INODE_INFO_INDEX_INUM(ip)) {
         ip->minor = (short) GET_INODE_INFO_INDEX_MINOR(ip);
     } else if (ip->inum > PID_INUM_START && (ip->inum & 3) == 0) {
         ip->minor = (short) ip->inum;
-//        ip->size = 2 * sizeof(struct dirent);
     } else if (ip->inum > PID_INUM_START) {
         ip->minor = (short) ip->inum;
     }
@@ -59,6 +56,7 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
         int pid = 0;
         int index = 0;
         switch (deOff) {
+
             case CURRENT_DIR_OFF:
                 safestrcpy(de->name, ".", sizeof("."));
                 de->inum = (ushort) ip->inum;
@@ -71,6 +69,7 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
                 safestrcpy(de->name, "ideinfo", sizeof("ideinfo"));
                 de->inum = (IDE_INFO + TOTAL_INODE_NUM);
                 return sizeof(struct dirent);
+
             case FILE_STAT_OFF:
                 safestrcpy(de->name, "filestat", sizeof("filestat"));
                 de->inum = (FILE_STAT + TOTAL_INODE_NUM);
@@ -82,7 +81,6 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
             default:
                 index = deOff - INODE_INFO_OFF;
                 pid = getPIDByIndex(index);
-//                cprintf("pid: %d\n",pid);
                 if (pid < 0)
                     return 0;
                 sprintf(de->name, "%d", pid);
@@ -116,15 +114,27 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
                 "Waiting operations: %d\nRead waiting operations: %d\nWrite waiting operations: %d\nWorking blocks: %s\n",
                 waitOp, readOp, writeOp, workingBlocks);
         return strlen(dst);
-    } else if (ip->minor == INODE_INFO) {
+    } //case /proc/inodeinfo
+    else if (ip->minor == INODE_INFO) {
         struct dirent *de = (struct dirent *) dst;
         int deOff = off / sizeof(struct dirent);
-        int index = indexInInodeTable(deOff);
-        if (index < 0)
-            return 0;
-        sprintf(de->name, "%d", index);
-        de->inum = (ushort) GET_INODE_INFO_INDEX_INUM(index);
-        return sizeof(struct dirent);
+        if (deOff == CURRENT_DIR_OFF) {
+            safestrcpy(de->name, ".", sizeof("."));
+            de->inum = (ushort) ip->inum;
+            return sizeof(struct dirent);
+        } else if (deOff == PARENT_DIR_OFF) {
+            safestrcpy(de->name, "..", sizeof(".."));
+            de->inum = (ushort) namei("/proc")->inum;
+            return sizeof(struct dirent);
+        } else {
+            deOff -= 2;
+            int index = indexInInodeTable(deOff);
+            if (index < 0)
+                return 0;
+            sprintf(de->name, "%d", index);
+            de->inum = (ushort) GET_INODE_INFO_INDEX_INUM(index);
+            return sizeof(struct dirent);
+        }
     } //case /proc/inodeinfo/...
     else if (ip->minor > INODE_INFO && ip->minor <= INODE_INFO + NINODE + 1) {
         if (off > 0)
@@ -141,7 +151,15 @@ procfsread(struct inode *ip, char *dst, int off, int n) {
     else if (ip->minor > PID_INUM_START && (ip->minor & 3) == 0) {
         struct dirent *de = (struct dirent *) dst;
         int deOff = off / sizeof(struct dirent);
-        if (deOff == PID_NAME_OFF) {
+        if(deOff == CURRENT_DIR_OFF){
+            safestrcpy(de->name, ".", sizeof("."));
+            de->inum = (ushort) ip->inum;
+            return sizeof(struct dirent);
+        }else if(deOff == PARENT_DIR_OFF){
+            safestrcpy(de->name, "..", sizeof(".."));
+            de->inum = (ushort) namei("/proc")->inum;
+            return sizeof(struct dirent);
+        }else if (deOff == PID_NAME_OFF) {
             sprintf(de->name, "name");
             de->inum = (ushort) (ip->inum + 1);
             return sizeof(struct dirent);

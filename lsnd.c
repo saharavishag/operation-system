@@ -43,17 +43,19 @@ int main(void) {
     char result[512];
 
     while (read(inodesDirFd, &de, sizeof(de)) > 0) {
-        sprintf(path, "/proc/inodeinfo/%s", de.name);
-        int inodeFd = open(path, 0);
-        if (read(inodeFd, &buf, sizeof(buf)) <= 0) {
-            printf(1, "reading name: %s inum: %d failed\n", de.name, de.inum);
+        if (de.name[0] != '.') {
+            sprintf(path, "/proc/inodeinfo/%s", de.name);
+            int inodeFd = open(path, 0);
+            if (read(inodeFd, &buf, sizeof(buf)) <= 0) {
+                printf(1, "reading name: %s inum: %d failed\n", de.name, de.inum);
+            }
+
+            getData(buf, result);
+            printf(1, "%s\n", result);
+
+
+            close(inodeFd);
         }
-//        printf(1, "%s\n", buf);
-        getData(buf, result);
-        printf(1, "%s\n", result);
-
-        close(inodeFd);
-
     }
     close(inodesDirFd);
 
